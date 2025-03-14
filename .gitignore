@@ -1,0 +1,11 @@
+# Build files
+bin/
+obj/
+
+# Debug and Release directories
+obj/Debug/
+obj/Release/
+
+# User-specific settings
+.vscode/
+*.user

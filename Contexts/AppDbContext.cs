@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using UserAuthApi.Models;
 
 namespace UserAuthApi.Contexts;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options) {
-    //Define my tables here
+    
+    DbSet<User> Users { get; set; }
 }
