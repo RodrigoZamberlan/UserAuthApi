@@ -3,7 +3,8 @@ using UserAuthApi.Models;
 
 namespace UserAuthApi.Contexts;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options) {
-    
-    DbSet<User> Users { get; set; }
+public class AppDbContext : DbContext {
+    public AppDbContext(DbContextOptions<AppDbContext> options): base(options) {}
+
+    public DbSet<User> Users { get; set; }
 }
