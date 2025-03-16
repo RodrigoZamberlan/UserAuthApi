@@ -25,22 +25,61 @@ public class UserController: ControllerBase {
         var user = await _context.Users.FindAsync(id);
 
         if (user == null) {
-            return NotFound($"User with {id} not found");
+            return NotFound($"User with the id {id} not found");
         }
 
         return Ok(user);
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateUser([FromBody] User user) {
-        var existingUser = await _context.Users.AnyAsync(u => u.Email == user.Email);
+    public async Task<IActionResult> CreateUser([FromBody] User newUserData) {
+        var existingUser = await _context.Users.AnyAsync(u => u.Email == newUserData.Email);
 
         if (existingUser) {
-            return Conflict($"Email {user.Email} already exists.");
+            return Conflict($"Email {newUserData.Email} already exists");
         }
         
-        _context.Users.Add(user);
+        _context.Users.Add(newUserData);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetUserById), new { id = user.Id}, user);
+        return CreatedAtAction(nameof(GetUserById), new { id = newUserData.Id}, newUserData);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateUser(int id, [FromBody] User updatedUserData) {
+        if (updatedUserData == null || updatedUserData.Id == id) {
+            return BadRequest("Invalid user data");
+        }
+
+        var userToUpdate = await _context.Users.FindAsync(updatedUserData.Id);
+        if (userToUpdate == null) {
+            return NotFound($"User {updatedUserData.Firstname} not found");
+        }
+
+        userToUpdate.Firstname = userToUpdate.Firstname;
+        userToUpdate.Lastname = userToUpdate.Lastname;
+        userToUpdate.Lastname = userToUpdate.Lastname;
+        userToUpdate.Email = userToUpdate.Email;
+        userToUpdate.Password = userToUpdate.Password;
+        userToUpdate.Role = userToUpdate.Role;
+        userToUpdate.Active = userToUpdate.Active;
+
+        _context.Users.Update(userToUpdate);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteUser(int id) {
+        var userToDelete = await _context.Users.FindAsync(id);
+
+        if (userToDelete == null) {
+            return NotFound($"User with the id {id} not found");
+        }
+
+        _context.Users.Remove(userToDelete);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 }
