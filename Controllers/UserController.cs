@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UserAuthApi.Contexts;
 using UserAuthApi.Models;
-using UserAuthApi.Utils; 
 
 namespace UserAuthApi.Controllers;
 
@@ -34,10 +33,6 @@ public class UserController: ControllerBase {
 
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] User newUserData) {
-        if (!ModelValidator.Validate<User>(newUserData, out string errorMessage)) {
-            return BadRequest(errorMessage);
-        }
-
         var existingUser = await _context.Users.AnyAsync(u => u.Email == newUserData.Email);
 
         if (existingUser) {
@@ -51,10 +46,6 @@ public class UserController: ControllerBase {
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] User updatedUserData) {
-        if (!ModelValidator.Validate<User>(updatedUserData, out string errorMessage)) {
-            return BadRequest(errorMessage);
-        }
-        
         if (updatedUserData == null || updatedUserData.Id == id) {
             return BadRequest("Invalid user data");
         }
