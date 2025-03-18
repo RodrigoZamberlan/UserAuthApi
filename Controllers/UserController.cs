@@ -1,9 +1,10 @@
-using System.Security.Claims;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UserAuthApi.Contexts;
-using UserAuthApi.DTO;
+using UserAuthApi.DTOs;
 using UserAuthApi.Helpers;
 using UserAuthApi.Models;
 
@@ -11,30 +12,24 @@ namespace UserAuthApi.Controllers;
 
 /*
     IMPROVEMENTS TO DO
-    1. Create and use helpers by refactoring those repetetive parts (mostly on verification if the user it is the admin and blocks that are using dto's)
-    2. Encrypt the password before save in the database
+    1. Encrypt the password before save in the database
 */
 
 [Route("api/users")]
 [ApiController]
 public class UserController: ControllerBase {
     private readonly AppDbContext _context;
+    private readonly IMapper _mapper;
 
-    public UserController(AppDbContext context) {
+    public UserController(AppDbContext context, IMapper mapper) {
         _context = context;
+        _mapper = mapper;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetUsers() {
         var users = await _context.Users
-        .Select(user => new UserDTO
-        {
-            Firstname = user.Firstname,
-            Lastname = user.Lastname,
-            Email = user.Email,
-            Role = user.Role,
-            Active = user.Active
-        })
+        .ProjectTo<UserDTO>(_mapper.ConfigurationProvider)
         .ToListAsync();
         return Ok(users);
     }
@@ -53,14 +48,7 @@ public class UserController: ControllerBase {
             return Forbid("You can only access your own user info unless you're an admin.");
         }
 
-        var userDto = new UserDTO
-        {
-            Firstname = user.Firstname,
-            Lastname = user.Lastname,
-            Email = user.Email,
-            Role = user.Role,
-            Active = user.Active
-        };
+        var userDto = _mapper.Map<UserDTO>(user);
 
         return Ok(userDto);
     }

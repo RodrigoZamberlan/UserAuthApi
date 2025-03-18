@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace UserAuthApi.DTO;
+namespace UserAuthApi.DTOs;
 
 public class UserDTO {
     [Required]
