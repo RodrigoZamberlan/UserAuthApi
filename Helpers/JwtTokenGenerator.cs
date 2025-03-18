@@ -18,7 +18,7 @@ namespace UserAuthApi.Helpers
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, $"{user.Firstname} {user.Lastname}")
+                new Claim(ClaimTypes.Name, $"{user.Firstname} {user.Lastname}"),
             };
 
              var token = new JwtSecurityToken(

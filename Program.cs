@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 var jwtSettings = builder.Configuration.GetRequiredSection("JwtSettings");
 var key = Encoding.UTF8.GetBytes(jwtSettings.GetValue<string>("key") ?? throw new ArgumentNullException("JWT key is missing"));
+var frontEndUrl = jwtSettings["Audience"] ?? "http://localhost:3000";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => {
     options.TokenValidationParameters = new TokenValidationParameters {
@@ -19,6 +20,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(frontEndUrl)
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
 });
 
 builder.Services.AddDbContext<AppDbContext>(options =>

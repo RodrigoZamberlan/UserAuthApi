@@ -17,7 +17,8 @@ public class User {
     [Required]
     public required string Password { get; set; }
 
-    public string? Role { get; set; }
+    [Required]
+    public string Role { get; set; } = "default";
 
-    public bool Active { get; set; }
+    public bool Active { get; set; } = true;
 }
