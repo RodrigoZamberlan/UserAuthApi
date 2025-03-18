@@ -74,6 +74,13 @@ public class UserController: ControllerBase {
     [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(int id) {
+        var currentUserLoggedId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var currentUserLoggedRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "default";
+
+        if (currentUserLoggedId != id || currentUserLoggedRole != "admin") {
+            return Forbid("You can only delete your own account unless you're an admin");
+        }
+
         var userToDelete = await _context.Users.FindAsync(id);
 
         if (userToDelete == null) {
