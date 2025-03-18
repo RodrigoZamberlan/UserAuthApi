@@ -4,9 +4,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UserAuthApi.Contexts;
 using UserAuthApi.DTO;
+using UserAuthApi.Helpers;
 using UserAuthApi.Models;
 
 namespace UserAuthApi.Controllers;
+
+/*
+    IMPROVEMENTS TO DO
+    1. Create and use helpers by refactoring those repetetive parts (mostly on verification if the user it is the admin and blocks that are using dto's)
+    2. Encrypt the password before save in the database
+*/
 
 [Route("api/users")]
 [ApiController]
@@ -39,11 +46,9 @@ public class UserController: ControllerBase {
         if (user == null) {
             return NotFound($"User with the id {id} not found");
         }
-        
-        var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-        var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "default";
 
-        if (currentUserId != id && currentUserRole != "admin")
+        var isAuthorized = UserClaims.IsAuthorizedOrAdmin(User, id);
+        if (!isAuthorized)
         {
             return Forbid("You can only access your own user info unless you're an admin.");
         }
@@ -101,11 +106,10 @@ public class UserController: ControllerBase {
     [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(int id) {
-        var currentUserLoggedId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-        var currentUserLoggedRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "default";
-
-        if (currentUserLoggedId != id || currentUserLoggedRole != "admin") {
-            return Forbid("You can only delete your own account unless you're an admin");
+        var isAuthorized = UserClaims.IsAuthorizedOrAdmin(User, id);
+        if (!isAuthorized)
+        {
+            return Forbid("You can only access your own user info unless you're an admin.");
         }
 
         var userToDelete = await _context.Users.FindAsync(id);
