@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UserAuthApi.Contexts;
+using UserAuthApi.DTO;
 using UserAuthApi.Models;
 
 namespace UserAuthApi.Controllers;
@@ -18,7 +19,16 @@ public class UserController: ControllerBase {
 
     [HttpGet]
     public async Task<IActionResult> GetUsers() {
-        var users = await _context.Users.ToListAsync();
+        var users = await _context.Users
+        .Select(user => new UserDTO
+        {
+            Firstname = user.Firstname,
+            Lastname = user.Lastname,
+            Email = user.Email,
+            Role = user.Role,
+            Active = user.Active
+        })
+        .ToListAsync();
         return Ok(users);
     }
 
@@ -29,8 +39,25 @@ public class UserController: ControllerBase {
         if (user == null) {
             return NotFound($"User with the id {id} not found");
         }
+        
+        var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "default";
 
-        return Ok(user);
+        if (currentUserId != id && currentUserRole != "admin")
+        {
+            return Forbid("You can only access your own user info unless you're an admin.");
+        }
+
+        var userDto = new UserDTO
+        {
+            Firstname = user.Firstname,
+            Lastname = user.Lastname,
+            Email = user.Email,
+            Role = user.Role,
+            Active = user.Active
+        };
+
+        return Ok(userDto);
     }
 
     [HttpPost]

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UserAuthApi.Contexts;
 using UserAuthApi.Helpers;
-using UserAuthApi.Models;
+using UserAuthApi.DTOs;
 
 namespace UserAuthApi.Controllers; 
 

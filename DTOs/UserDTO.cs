@@ -1,10 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace UserAuthApi.Models;
+namespace UserAuthApi.DTO;
 
-public class User {
-    public int Id { get; set; }
-    
+public class UserDTO {
     [Required]
     public required string Firstname { get; set; }
     
@@ -13,9 +11,6 @@ public class User {
     
     [Required, EmailAddress]
     public required string Email { get; set; }
-    
-    [Required]
-    public required string Password { get; set; }
 
     public string Role { get; set; } = "default";
 
