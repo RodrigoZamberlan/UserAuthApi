@@ -2,39 +2,34 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using UserAuthApi.Models;
 
 namespace UserAuthApi.Helpers
 {
-    public class JwtTokenGenerator
+    public static class JwtTokenGenerator
     {
-        private readonly IConfiguration _config;
+       public static string GenerateJwtToken(User user, IConfiguration configuration) {
+         var jwtSettings = configuration.GetSection("JwtSettings");
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
 
-        public JwtTokenGenerator(IConfiguration config)
-        {
-            _config = config;
-        }
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        public string GenerateToken(string email, int userId)
-        {
-            var jwtSettings = _config.GetSection("Jwt");
-            var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new ArgumentNullException("JWT key is missing"));
-            
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("userId", userId.ToString())
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, $"{user.Firstname} {user.Lastname}")
             };
 
-            var token = new JwtSecurityToken(
+             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(2),
-                signingCredentials: new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
+                expires: DateTime.UtcNow.AddMinutes(int.Parse(jwtSettings["ExpiryMinutes"]!)),
+                signingCredentials: credentials
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
+       }
     }
 }

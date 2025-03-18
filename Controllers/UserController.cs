@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UserAuthApi.Contexts;
@@ -69,6 +71,7 @@ public class UserController: ControllerBase {
         return NoContent();
     }
 
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(int id) {
         var userToDelete = await _context.Users.FindAsync(id);
