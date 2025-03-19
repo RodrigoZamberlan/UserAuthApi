@@ -8,18 +8,18 @@ using UserAuthApi.Mappings;
 var builder = WebApplication.CreateBuilder(args);
 
 var jwtSettings = builder.Configuration.GetRequiredSection("JwtSettings");
-var key = Encoding.UTF8.GetBytes(jwtSettings.GetValue<string>("key") ?? throw new ArgumentNullException("JWT key is missing"));
+var key = jwtSettings.GetValue<string>("Key") ?? throw new ArgumentNullException("JWT key is missing");
 var frontEndUrl = jwtSettings["Audience"] ?? "http://localhost:3000";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => {
     options.TokenValidationParameters = new TokenValidationParameters {
-        ValidateIssuer = true,
-        ValidateAudience = true,
+        ValidateIssuer = false,
+        ValidateAudience = false,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(key)
+        IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(key))
     };
 });
 

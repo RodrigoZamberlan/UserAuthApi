@@ -5,8 +5,8 @@ namespace UserAuthApi.Helpers;
 public static class UserClaims {
     
     public static (int id, string role) GetUserClaimsInfo(ClaimsPrincipal user) {
-        var id = int.Parse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-        var role = user.FindFirst(ClaimTypes.Role)?.Value ?? "default";
+        var id = int.Parse(user.FindFirst("sub")?.Value ?? "0");
+        var role = user.FindFirst("role")?.Value ?? "default";
 
         return (id, role);
     }

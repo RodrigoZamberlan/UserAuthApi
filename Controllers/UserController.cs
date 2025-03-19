@@ -42,10 +42,11 @@ public class UserController: ControllerBase {
             return NotFound($"User with the id {id} not found");
         }
 
+        var (idLogged, roleLogged) = UserClaims.GetUserClaimsInfo(User);
         var isAuthorized = UserClaims.IsAuthorizedOrAdmin(User, id);
         if (!isAuthorized)
         {
-            return Forbid("You can only access your own user info unless you're an admin.");
+            return Unauthorized($"Info logged: {idLogged} {id} {roleLogged} You can only access your own user info unless you're an admin.");
         }
 
         var userDto = _mapper.Map<UserDTO>(user);
