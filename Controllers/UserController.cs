@@ -26,14 +26,22 @@ public class UserController: ControllerBase {
         _mapper = mapper;
     }
 
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetUsers() {
+        var isAuthorized = UserClaims.IsAdmin(User);
+        if (!isAuthorized)
+        {
+            return Unauthorized("Only user's with the admin role can access the list of all user's");
+        }
+
         var users = await _context.Users
         .ProjectTo<UserDTO>(_mapper.ConfigurationProvider)
         .ToListAsync();
         return Ok(users);
     }
 
+    [Authorize]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUserById(int id) {
         var user = await _context.Users.FindAsync(id);
@@ -42,11 +50,10 @@ public class UserController: ControllerBase {
             return NotFound($"User with the id {id} not found");
         }
 
-        var (idLogged, roleLogged) = UserClaims.GetUserClaimsInfo(User);
         var isAuthorized = UserClaims.IsAuthorizedOrAdmin(User, id);
         if (!isAuthorized)
         {
-            return Unauthorized($"Info logged: {idLogged} {id} {roleLogged} You can only access your own user info unless you're an admin.");
+            return Unauthorized("You can only access your own user info unless you're an admin user");
         }
 
         var userDto = _mapper.Map<UserDTO>(user);
@@ -56,19 +63,28 @@ public class UserController: ControllerBase {
 
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] User newUserData) {
-        var existingUser = await _context.Users.AnyAsync(u => u.Email == newUserData.Email);
+        bool existingUser = await _context.Users.AnyAsync(u => u.Email == newUserData.Email);
 
         if (existingUser) {
             return Conflict($"Email {newUserData.Email} already exists");
         }
+
+        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newUserData.Password);
+        newUserData.Password = hashedPassword;
         
         _context.Users.Add(newUserData);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetUserById), new { id = newUserData.Id}, newUserData);
     }
 
+    [Authorize]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] User updatedUserData) {
+        var isAuthorized = UserClaims.IsAuthorizedOrAdmin(User, id);
+        if (!isAuthorized) {
+            return Unauthorized("You can only edit your own user profile unless you're an admin user");
+        }
+        
         if (updatedUserData == null || updatedUserData.Id == id) {
             return BadRequest("Invalid user data");
         }
@@ -98,7 +114,7 @@ public class UserController: ControllerBase {
         var isAuthorized = UserClaims.IsAuthorizedOrAdmin(User, id);
         if (!isAuthorized)
         {
-            return Forbid("You can only access your own user info unless you're an admin.");
+            return Unauthorized("You can only access your own user info unless you're an admin");
         }
 
         var userToDelete = await _context.Users.FindAsync(id);

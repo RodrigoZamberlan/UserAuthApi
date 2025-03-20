@@ -19,10 +19,11 @@ public class AuthController : ControllerBase {
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] UserLoginDTO userLoginDto) {
-        var existingUser = await _context.Users.FirstOrDefaultAsync(user => user.Email == userLoginDto.Email && user.Password == userLoginDto.Password);
 
-        if (existingUser == null) {
-            return Unauthorized("Invalid email or password");
+        var existingUser = await _context.Users.FirstOrDefaultAsync(user => user.Email == userLoginDto.Email);
+
+        if (existingUser == null || !BCrypt.Net.BCrypt.Verify(userLoginDto.Password, existingUser.Password)) {
+            return Unauthorized($"Invalid email or password");
         }
 
         var token = JwtTokenGenerator.GenerateJwtToken(existingUser, _configuration);
